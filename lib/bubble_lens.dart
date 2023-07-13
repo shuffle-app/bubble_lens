@@ -9,7 +9,7 @@ class BubbleLens extends StatefulWidget {
   final double paddingX;
   final double paddingY;
   final Duration duration;
-  final Radius radius;
+  // final Radius radius;
   final bool fadeEdge;
   final double itemMaxScale;
   final double verticalStepCoefficient;
@@ -26,7 +26,7 @@ class BubbleLens extends StatefulWidget {
     this.itemMaxScale = .97,
     this.verticalStepCoefficient = 1.15,
     this.duration = const Duration(milliseconds: 100),
-    this.radius = const Radius.circular(999),
+    // this.radius = const Radius.circular(999),
   }) : super(key: key);
 
   @override
@@ -168,8 +168,8 @@ class BubbleLensState extends State<BubbleLens> {
                   filterQuality: FilterQuality.medium,
                   duration: widget.duration,
                   // origin: Offset(originX, originY),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.all(widget.radius),
+                  // child: ClipRRect(
+                  //   borderRadius: BorderRadius.all(widget.radius),
                     child: Opacity(
                       opacity: (widget.fadeEdge && fadePercent > fadeValue)
                           ? max(
@@ -185,7 +185,7 @@ class BubbleLensState extends State<BubbleLens> {
                         height: widget.itemSize,
                         child: item,
                       ),
-                    ),
+                    // ),
                   )));
         }).toList()),
       ),
