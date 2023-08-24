@@ -9,6 +9,7 @@ class BubbleLens extends StatefulWidget {
   final double paddingX;
   final double paddingY;
   final Duration duration;
+
   // final Radius radius;
   final bool fadeEdge;
   final double itemMaxScale;
@@ -52,10 +53,12 @@ class BubbleLensState extends State<BubbleLens> {
 
   double get longerSide => max(widget.width, widget.height);
 
+  late final step;
+
   @override
   void initState() {
     super.initState();
-
+    step = widget.itemSize / 2;
     _middleX = widget.width / 2;
     _middleY = widget.height / 2;
     _offsetX = _middleX - widget.itemSize / 2;
@@ -84,6 +87,30 @@ class BubbleLensState extends State<BubbleLens> {
     ];
   }
 
+  // _findOffsetToCenter() {
+  //   double dx = _offsetX;
+  //   double dy = _offsetY;
+  //   if (dx > _middleX) {
+  //     while (dx > _middleX) {
+  //       dx -= step;
+  //     }
+  //   } else if (dx < _middleX) {
+  //     while (dx < _middleX) {
+  //       dx += step;
+  //     }
+  //   }
+  //   if (dy > _middleY) {
+  //     while (dy > _middleY) {
+  //       dy -= step;
+  //     }
+  //   } else if (dy < _middleY) {
+  //     while (dy < _middleY) {
+  //       dy += step;
+  //     }
+  //   }
+  //   return Offset(dx, dy);
+  // }
+
   @override
   void dispose() {
     super.dispose();
@@ -109,6 +136,15 @@ class BubbleLensState extends State<BubbleLens> {
               _offsetY = newOffsetY;
             });
           }
+        },
+        onPanEnd: (details) {
+          double deltaVelocityX = details.velocity.pixelsPerSecond.dx / widget.itemSize;
+          double deltaVelocityY = details.velocity.pixelsPerSecond.dy / widget.itemSize;
+
+            setState(() {
+              _offsetX += (_offsetX + deltaVelocityX)%step;
+              _offsetY += (_offsetY+deltaVelocityY)%step;
+            });
         },
         child: Stack(
             children: widget.widgets.map((item) {
@@ -146,7 +182,7 @@ class BubbleLensState extends State<BubbleLens> {
                   pow(_middleY - (top + widget.itemSize / 2), 2));
           double distPercent = distance / (longerSide / 2);
 
-          double scale = .3 * log(distPercent * -1 + 1.2) + widget.itemMaxScale;
+          double scale = .3 * log(distPercent * -1 + 1.5) + widget.itemMaxScale;
           scale = max(.3, min(1, (scale)));
           if (scale.toString() == double.nan.toString()) scale = .3;
 
@@ -170,21 +206,21 @@ class BubbleLensState extends State<BubbleLens> {
                   // origin: Offset(originX, originY),
                   // child: ClipRRect(
                   //   borderRadius: BorderRadius.all(widget.radius),
-                    child: Opacity(
-                      opacity: (widget.fadeEdge && fadePercent > fadeValue)
-                          ? max(
-                              0,
-                              min(
-                                  1,
-                                  1 -
-                                      (fadePercent - fadeValue) /
-                                          (1 - fadeValue)))
-                          : 1,
-                      child: SizedBox(
-                        width: widget.itemSize,
-                        height: widget.itemSize,
-                        child: item,
-                      ),
+                  child: Opacity(
+                    opacity: (widget.fadeEdge && fadePercent > fadeValue)
+                        ? max(
+                            0,
+                            min(
+                                1,
+                                1 -
+                                    (fadePercent - fadeValue) /
+                                        (1 - fadeValue)))
+                        : 1,
+                    child: SizedBox(
+                      width: widget.itemSize,
+                      height: widget.itemSize,
+                      child: item,
+                    ),
                     // ),
                   )));
         }).toList()),
