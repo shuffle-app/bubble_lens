@@ -36,6 +36,7 @@ class BubbleLens extends StatefulWidget {
 
 class BubbleLensState extends State<BubbleLens> {
   static const _scaleFactor = .2;
+  late Duration moveDuration;
   double _middleX = 0;
   double _middleY = 0;
   double _offsetX = 0;
@@ -58,6 +59,7 @@ class BubbleLensState extends State<BubbleLens> {
 
   @override
   void initState() {
+    moveDuration = widget.duration;
     super.initState();
     step = widget.itemSize / 2;
     _middleX = widget.width / 2;
@@ -71,7 +73,7 @@ class BubbleLensState extends State<BubbleLens> {
         -(widget.itemSize / 2) + -(widget.paddingX / 2),
         -widget.itemSize / widget.verticalStepCoefficient + -widget.paddingY
       ],
-      [-widget.itemSize + -widget.paddingX, 0],
+      [-widget.itemSize/1.05 + -widget.paddingX, 0],
       [
         -(widget.itemSize / 2) + -(widget.paddingX / 2),
         widget.itemSize / widget.verticalStepCoefficient + widget.paddingY
@@ -80,7 +82,7 @@ class BubbleLensState extends State<BubbleLens> {
         (widget.itemSize / 2) + (widget.paddingX / 2),
         widget.itemSize / widget.verticalStepCoefficient + widget.paddingY
       ],
-      [widget.itemSize + widget.paddingX, 0],
+      [widget.itemSize/1.05 + widget.paddingX, 0],
       [
         (widget.itemSize / 2) + (widget.paddingX / 2),
         -widget.itemSize / widget.verticalStepCoefficient + -widget.paddingY
@@ -133,6 +135,9 @@ class BubbleLensState extends State<BubbleLens> {
               max(_minTop, min(_maxTop, _offsetY + details.delta.dy));
           if (newOffsetX != _offsetX || newOffsetY != _offsetY) {
             setState(() {
+              if(moveDuration!=widget.duration){
+                moveDuration = widget.duration;
+              }
               _offsetX = newOffsetX;
               _offsetY = newOffsetY;
             });
@@ -142,16 +147,21 @@ class BubbleLensState extends State<BubbleLens> {
           final double deltaVelocityX = details.velocity.pixelsPerSecond.dx / widget.itemSize;
           final double deltaVelocityY = details.velocity.pixelsPerSecond.dy / widget.itemSize;
 
+          _offsetX += deltaVelocityX*pi;
+          _offsetY += deltaVelocityY*pi;
+
             setState(() {
-              _offsetX += (_offsetX + (deltaVelocityX *details.velocity.pixelsPerSecond.distanceSquared))%step;
-              _offsetY += (_offsetY+(deltaVelocityY*details.velocity.pixelsPerSecond.distanceSquared))%step;
+              moveDuration = Duration(milliseconds:300);
+              _offsetX += (_offsetX - _middleX) %step;
+              _offsetY += (_offsetY-_middleY) %step;
             });
         },
         child: Stack(
             children: widget.widgets.map((item) {
           int index = widget.widgets.indexOf(item);
-          late final double left;
-          late final double top;
+          double left;
+          Duration move = moveDuration;
+          double top;
           if (index == 0) {
             left = _offsetX;
             top = _offsetY;
@@ -165,6 +175,7 @@ class BubbleLensState extends State<BubbleLens> {
           } else {
             List step = _steps[
                 ((index - _lastTotal - 2) / _counter % _steps.length).floor()];
+            // print('')
             left = _lastX + step[0];
             top = _lastY + step[1];
           }
@@ -179,9 +190,27 @@ class BubbleLensState extends State<BubbleLens> {
           _lastX = left;
           _lastY = top;
           final double distance = sqrt(
-              pow(_middleX - (left + widget.itemSize / 2), 2) +
-                  pow(_middleY - (top + widget.itemSize / 2), 2));
-          final double distPercent = distance / (longerSide / 2);
+              pow(_middleX - (left + widget.itemSize / 3), 2) +
+                  pow(_middleY - (top + widget.itemSize / 3), 2));
+          final double distPercent = distance / (longerSide / 2.2);
+
+          if(distance>widget.itemSize*1.7){
+            if(top<_middleY){
+              top +=  widget.itemSize/ 4;
+            } else {
+              top -=  widget.itemSize/ 4;
+            }
+
+            if(left<_middleX){
+              left +=  widget.itemSize/ 4;
+            }
+            else{
+              left -=  widget.itemSize/ 4;
+            }
+
+            move = Duration(milliseconds:300);
+          }
+
 
           double scale = _scaleFactor * log(distPercent * -1 +0.8) + widget.itemMaxScale;
           scale = max(_scaleFactor, min(1, (scale)));
@@ -195,9 +224,10 @@ class BubbleLensState extends State<BubbleLens> {
           //     max(widget.itemSize * -1, top - _middleY)) / -2;
 
           final double fadePercent = distPercent * .7;
-          final double fadeValue = .7;
+          final double fadeValue = .5;
           return AnimatedPositioned(
-              duration: widget.duration,
+              duration: move,
+              // duration: widget.duration,
               curve: Curves.linearToEaseOut,
               top: top,
               left: left,
@@ -205,7 +235,8 @@ class BubbleLensState extends State<BubbleLens> {
                   scale: scale,
                   curve: Curves.decelerate,
                   filterQuality: FilterQuality.medium,
-                  duration: widget.duration,
+                  duration: const Duration(milliseconds:100),
+                  // duration: widget.duration,
                   // origin: Offset(originX, originY),
                   // child: ClipRRect(
                   //   borderRadius: BorderRadius.all(widget.radius),
