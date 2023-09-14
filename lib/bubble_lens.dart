@@ -147,14 +147,19 @@ class BubbleLensState extends State<BubbleLens> {
           final double deltaVelocityX = details.velocity.pixelsPerSecond.dx / widget.itemSize;
           final double deltaVelocityY = details.velocity.pixelsPerSecond.dy / widget.itemSize;
 
-          _offsetX += deltaVelocityX*pi;
-          _offsetY += deltaVelocityY*pi;
+
 
             setState(() {
               moveDuration = Duration(milliseconds:300);
-              _offsetX += (_offsetX - _middleX) %step;
-              _offsetY += (_offsetY-_middleY) %step;
+              _offsetX += deltaVelocityX*pi;
+              _offsetY += deltaVelocityY*pi;
             });
+            // Future.delayed(moveDuration, () {
+            //   setState(() {
+            //     _offsetX += (_offsetX - _middleX) %step;
+            //     _offsetY += (_offsetY-_middleY) %step;
+            //   });
+            // });
         },
         child: Stack(
             children: widget.widgets.map((item) {
