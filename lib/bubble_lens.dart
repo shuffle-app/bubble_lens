@@ -34,6 +34,7 @@ class BubbleLens extends StatefulWidget {
 
 class BubbleLensState extends State<BubbleLens> {
   static const _scaleFactor = .2;
+  late Duration moveDuration;
   double _middleX = 0;
   double _middleY = 0;
   double _offsetX = 0;
@@ -56,6 +57,7 @@ class BubbleLensState extends State<BubbleLens> {
 
   @override
   void initState() {
+    moveDuration = widget.duration;
     super.initState();
     step = widget.itemSize / 2;
     _middleX = widget.width / 2;
@@ -69,7 +71,7 @@ class BubbleLensState extends State<BubbleLens> {
         -(widget.itemSize / 2) + -(widget.paddingX / 2),
         -widget.itemSize / widget.verticalStepCoefficient + -widget.paddingY
       ],
-      [-widget.itemSize + -widget.paddingX, 0],
+      [-widget.itemSize / 1.05 + -widget.paddingX, 0],
       [
         -(widget.itemSize / 2) + -(widget.paddingX / 2),
         widget.itemSize / widget.verticalStepCoefficient + widget.paddingY
@@ -78,7 +80,7 @@ class BubbleLensState extends State<BubbleLens> {
         (widget.itemSize / 2) + (widget.paddingX / 2),
         widget.itemSize / widget.verticalStepCoefficient + widget.paddingY
       ],
-      [widget.itemSize + widget.paddingX, 0],
+      [widget.itemSize / 1.05 + widget.paddingX, 0],
       [
         (widget.itemSize / 2) + (widget.paddingX / 2),
         -widget.itemSize / widget.verticalStepCoefficient + -widget.paddingY
@@ -109,6 +111,9 @@ class BubbleLensState extends State<BubbleLens> {
           double newOffsetY = max(_minTop, min(_maxTop, _offsetY + details.delta.dy));
           if (newOffsetX != _offsetX || newOffsetY != _offsetY) {
             setState(() {
+              if (moveDuration != widget.duration) {
+                moveDuration = widget.duration;
+              }
               _offsetX = newOffsetX;
               _offsetY = newOffsetY;
             });
