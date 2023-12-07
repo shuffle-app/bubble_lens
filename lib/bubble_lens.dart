@@ -25,7 +25,7 @@ class BubbleLens extends StatefulWidget {
     this.paddingY = 0,
     this.itemMaxScale = .99,
     this.verticalStepCoefficient = 1.3,
-    this.duration = const Duration(milliseconds: 100),
+    this.duration = const Duration(milliseconds: 30),
   }) : super(key: key);
 
   @override
@@ -33,7 +33,7 @@ class BubbleLens extends StatefulWidget {
 }
 
 class BubbleLensState extends State<BubbleLens> {
-  static const _scaleFactor = .2;
+  static const _scaleFactor = .25;
   late Duration moveDuration;
   double _middleX = 0;
   double _middleY = 0;
@@ -119,11 +119,30 @@ class BubbleLensState extends State<BubbleLens> {
             });
           }
         },
+        onPanEnd: (details) {
+          final double deltaVelocityX =
+              details.velocity.pixelsPerSecond.dx / widget.itemSize / (widget.widgets.length / 2);
+          final double deltaVelocityY =
+              details.velocity.pixelsPerSecond.dy / widget.itemSize / (widget.widgets.length / 2);
+
+          setState(() {
+            moveDuration = Duration(milliseconds: 300);
+            _offsetX += deltaVelocityX * pi * 10;
+            _offsetY += deltaVelocityY * pi * 10;
+          });
+          // Future.delayed(moveDuration, () {
+          //   setState(() {
+          //     _offsetX += (_offsetX - _middleX) %step;
+          //     _offsetY += (_offsetY-_middleY) %step;
+          //   });
+          // });
+        },
         child: Stack(
+          clipBehavior: Clip.none,
           children: widget.widgets.map((item) {
             int index = widget.widgets.indexOf(item);
-            late final double left;
-            late final double top;
+            late double left;
+            late double top;
             if (index == 0) {
               left = _offsetX;
               top = _offsetY;
@@ -148,32 +167,43 @@ class BubbleLensState extends State<BubbleLens> {
                 sqrt(pow(_middleX - (left + widget.itemSize / 2), 2) + pow(_middleY - (top + widget.itemSize / 2), 2));
             final double distPercent = distance / (longerSide / 1.9);
 
-            double scale = _scaleFactor * log(distPercent * -1 + 0.8) + widget.itemMaxScale;
+            if (distance > widget.itemSize * 1.7) {
+              if (top < _middleY) {
+                top += widget.itemSize / 4;
+              } else {
+                top -= widget.itemSize / 4;
+              }
+
+              if (left < _middleX) {
+                left += widget.itemSize / 4;
+              } else {
+                left -= widget.itemSize / 4;
+              }
+              moveDuration = Duration(microseconds: widget.duration.inMilliseconds * 10);
+            }
+
+            double scale = _scaleFactor * log(distPercent * -1 + 0.73) + widget.itemMaxScale;
             scale = max(_scaleFactor, min(1, (scale)));
             if (scale.toString() == double.nan.toString()) scale = _scaleFactor;
             final double fadePercent = distPercent * .7;
             final double fadeValue = .7;
 
             return AnimatedPositioned(
-              duration: widget.duration,
+              duration: moveDuration,
               curve: Curves.linearToEaseOut,
               top: top,
               left: left,
-              child: AnimatedScale(
+              child: Transform.scale(
                 scale: scale,
-                curve: Curves.decelerate,
-                filterQuality: FilterQuality.medium,
-                duration: widget.duration,
                 child: Opacity(
-                  opacity: (widget.fadeEdge && fadePercent > fadeValue)
-                      ? max(0, min(1, 1 - (fadePercent - fadeValue) / (1 - fadeValue)))
-                      : 1,
-                  child: SizedBox(
-                    width: widget.itemSize,
-                    height: widget.itemSize,
-                    child: item,
-                  ),
-                ),
+                    opacity: (widget.fadeEdge && fadePercent > fadeValue)
+                        ? max(0, min(1, 1 - (fadePercent - fadeValue) / (1 - fadeValue)))
+                        : 1,
+                    child: SizedBox(
+                      width: widget.itemSize,
+                      height: widget.itemSize,
+                      child: item,
+                    )),
               ),
             );
           }).toList(),
