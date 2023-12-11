@@ -88,6 +88,20 @@ class BubbleLensState extends State<BubbleLens> {
     ];
   }
 
+  _recurciveInertion(double x, double y, int iteration) {
+    if (iteration > 41) {
+      iteration = 41;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      setState(() {
+        _offsetX += x * iteration;
+        _offsetY += y * iteration;
+      });
+      if (iteration - 5 <= 0)
+        _recurciveInertion(x, y, iteration - 5);
+    });
+  }
+
   @override
   void didUpdateWidget(covariant BubbleLens oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -125,17 +139,14 @@ class BubbleLensState extends State<BubbleLens> {
           final double deltaVelocityY =
               details.velocity.pixelsPerSecond.dy / widget.itemSize / (widget.widgets.length / 2);
 
+          // print('onPanEnd: deltaVelocityX: $deltaVelocityX deltaVelocityY $deltaVelocityY');
+
           setState(() {
             moveDuration = Duration(milliseconds: 300);
-            _offsetX += deltaVelocityX * pi * 10;
-            _offsetY += deltaVelocityY * pi * 10;
           });
-          // Future.delayed(moveDuration, () {
-          //   setState(() {
-          //     _offsetX += (_offsetX - _middleX) %step;
-          //     _offsetY += (_offsetY-_middleY) %step;
-          //   });
-          // });
+          _recurciveInertion(
+              deltaVelocityX, deltaVelocityY, ((deltaVelocityX.abs() + deltaVelocityY.abs()) * 20).toInt());
+
         },
         child: Stack(
           clipBehavior: Clip.none,
@@ -179,7 +190,7 @@ class BubbleLensState extends State<BubbleLens> {
               } else {
                 left -= widget.itemSize / 4;
               }
-              moveDuration = Duration(microseconds: widget.duration.inMilliseconds * 10);
+              // moveDuration = Duration(microseconds: widget.duration.inMilliseconds * 10);
             }
 
             double scale = _scaleFactor * log(distPercent * -1 + 0.73) + widget.itemMaxScale;
@@ -190,7 +201,9 @@ class BubbleLensState extends State<BubbleLens> {
 
             return AnimatedPositioned(
               duration: moveDuration,
-              curve: Curves.linearToEaseOut,
+              curve: moveDuration == widget.duration ? Curves.linear : Curves.easeOutCirc,
+              // curve: Curves.linear,
+              // curve: Curves.linearToEaseOut,
               top: top,
               left: left,
               child: Transform.scale(
