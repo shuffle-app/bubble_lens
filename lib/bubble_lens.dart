@@ -89,16 +89,18 @@ class BubbleLensState extends State<BubbleLens> {
   }
 
   _recurciveInertion(double x, double y, int iteration) {
-    if (iteration > 41) {
-      iteration = 41;
+    if (iteration > 38) {
+      iteration = 38;
     }
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      if(_offsetX.abs() >widget.width || _offsetY.abs() > widget.height) {
+        return;
+      }
       setState(() {
         _offsetX += x * iteration;
         _offsetY += y * iteration;
       });
-      if (iteration - 5 <= 0)
-        _recurciveInertion(x, y, iteration - 5);
+      if (iteration - 5 >= 0) _recurciveInertion(x, y, iteration - 5);
     });
   }
 
@@ -145,8 +147,7 @@ class BubbleLensState extends State<BubbleLens> {
             moveDuration = Duration(milliseconds: 300);
           });
           _recurciveInertion(
-              deltaVelocityX, deltaVelocityY, ((deltaVelocityX.abs() + deltaVelocityY.abs()) * 20).toInt());
-
+              deltaVelocityX, deltaVelocityY, ((deltaVelocityX.abs() + deltaVelocityY.abs()) * 40).toInt());
         },
         child: Stack(
           clipBehavior: Clip.none,
