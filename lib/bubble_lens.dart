@@ -93,7 +93,7 @@ class BubbleLensState extends State<BubbleLens> {
       iteration = 38;
     }
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      if(_offsetX.abs() >widget.width || _offsetY.abs() > widget.height) {
+      if (_offsetX.abs() > widget.width || _offsetY.abs() > widget.height) {
         return;
       }
       setState(() {
@@ -169,10 +169,12 @@ class BubbleLensState extends State<BubbleLens> {
               left = _lastX + step[0];
               top = _lastY + step[1];
             }
-            _minLeft = min(_minLeft, -(left - _offsetX) + _middleX - (widget.itemSize / 2.2));
-            _maxLeft = max(_maxLeft, left - _offsetX + _middleX - (widget.itemSize / 2.2));
-            _minTop = min(_minTop, -(top - _offsetY) + _middleY - (widget.itemSize / 2.2));
-            _maxTop = max(_maxTop, top - _offsetY + _middleY - (widget.itemSize / 2.2));
+            _minLeft = min(_minLeft, -(left - _offsetX) + (_middleX * 1.3));
+            _maxLeft = max(_maxLeft, left - _offsetX - (widget.itemSize / 10));
+
+            _minTop = min(_minTop, -(top - _offsetY) + (_middleY * 1.1));
+            _maxTop = max(_maxTop, top - _offsetY + _middleY - (widget.itemSize / 0.9));
+
             _lastX = left;
             _lastY = top;
             final double distance =
