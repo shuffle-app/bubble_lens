@@ -93,13 +93,14 @@ class BubbleLensState extends State<BubbleLens> {
       iteration = 38;
     }
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      if (_offsetX.abs() > widget.width || _offsetY.abs() > widget.height) {
-        return;
-      }
+      double newOffsetX = max(_minLeft, min(_maxLeft, _offsetX + x * iteration));
+      double newOffsetY = max(_minTop, min(_maxTop, _offsetY + y * iteration));
+
       setState(() {
-        _offsetX += x * iteration;
-        _offsetY += y * iteration;
+        _offsetX = newOffsetX;
+        _offsetY = newOffsetY;
       });
+
       if (iteration - 5 >= 0) _recurciveInertion(x, y, iteration - 5);
     });
   }
@@ -123,25 +124,16 @@ class BubbleLensState extends State<BubbleLens> {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onPanUpdate: (details) {
-          double newOffsetX = max(_minLeft, min(_maxLeft, _offsetX + details.delta.dx));
-          double newOffsetY = max(_minTop, min(_maxTop, _offsetY + details.delta.dy));
-          if (newOffsetX != _offsetX || newOffsetY != _offsetY) {
-            setState(() {
-              if (moveDuration != widget.duration) {
-                moveDuration = widget.duration;
-              }
-              _offsetX = newOffsetX;
-              _offsetY = newOffsetY;
-            });
-          }
+          setState(() {
+            _offsetX = max(_minLeft, min(_maxLeft, _offsetX + details.delta.dx));
+            _offsetY = max(_minTop, min(_maxTop, _offsetY + details.delta.dy));
+          });
         },
         onPanEnd: (details) {
           final double deltaVelocityX =
               details.velocity.pixelsPerSecond.dx / widget.itemSize / (widget.widgets.length / 2);
           final double deltaVelocityY =
               details.velocity.pixelsPerSecond.dy / widget.itemSize / (widget.widgets.length / 2);
-
-          // print('onPanEnd: deltaVelocityX: $deltaVelocityX deltaVelocityY $deltaVelocityY');
 
           setState(() {
             moveDuration = Duration(milliseconds: 300);
@@ -169,11 +161,11 @@ class BubbleLensState extends State<BubbleLens> {
               left = _lastX + step[0];
               top = _lastY + step[1];
             }
-            _minLeft = min(_minLeft, -(left - _offsetX) + (_middleX * 1.3));
-            _maxLeft = max(_maxLeft, left - _offsetX - (widget.itemSize / 10));
+            _minLeft = min(_minLeft, -(left - _offsetX) + (_middleX * 0.8));
+            _maxLeft = max(_maxLeft, (left - _offsetX) + (_middleX * 0.2) - (widget.itemSize / 10));
 
-            _minTop = min(_minTop, -(top - _offsetY) + (_middleY * 1.1));
-            _maxTop = max(_maxTop, top - _offsetY + _middleY - (widget.itemSize / 0.9));
+            _minTop = min(_minTop, -(top - _offsetY) + (_middleY * 0.8));
+            _maxTop = max(_maxTop, top - _offsetY + _middleY - (widget.itemSize / 5));
 
             _lastX = left;
             _lastY = top;
