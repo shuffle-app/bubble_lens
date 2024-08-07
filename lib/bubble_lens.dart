@@ -124,10 +124,17 @@ class BubbleLensState extends State<BubbleLens> {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onPanUpdate: (details) {
-          setState(() {
-            _offsetX = max(_minLeft, min(_maxLeft, _offsetX + details.delta.dx));
-            _offsetY = max(_minTop, min(_maxTop, _offsetY + details.delta.dy));
-          });
+          double newOffsetX = max(_minLeft, min(_maxLeft, _offsetX + details.delta.dx));
+          double newOffsetY = max(_minTop, min(_maxTop, _offsetY + details.delta.dy));
+          if (newOffsetX != _offsetX || newOffsetY != _offsetY) {
+            setState(() {
+              if (moveDuration != widget.duration) {
+                moveDuration = widget.duration;
+              }
+              _offsetX = newOffsetX;
+              _offsetY = newOffsetY;
+            });
+          }
         },
         onPanEnd: (details) {
           final double deltaVelocityX =
